@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -50,7 +51,10 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	var updatedBook model.Book
+
 	idParam := parseURL(r.URL.Path)
+
+	fmt.Println(idParam)
 	json.NewDecoder(r.Body).Decode(&updatedBook)
 	/*updateBook := model.Book{request["id"],
 	request["name"], request["isbn"],
@@ -115,6 +119,8 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
+
+	fmt.Println("deleteBook func------------------")
 	idParam := parseURL(r.URL.Path)
 	check := false
 

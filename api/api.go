@@ -21,8 +21,8 @@ import (
 func init() {
 	os.Setenv("ADMIN_USER", "admin")
 	os.Setenv("ADMIN_PASS", "1234")
-	db.InitBook()
 	db.InitAuthor()
+	db.InitBook()
 	db.InitUser()
 }
 
@@ -84,8 +84,8 @@ func HandleRequest() {
 		}
 	}()
 	log.Println("Server is listening on port 3333")
-
-	time.Sleep(5 * time.Second)
-	log.Println("Server is shutting down")
 	<-sigs
+	time.Sleep(2 * time.Second)
+	log.Println("Server is shutting down")
+
 }

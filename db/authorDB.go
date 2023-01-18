@@ -3,7 +3,8 @@ package db
 import "github.com/RokibulHasan7/book-api/model"
 
 var Authors []model.Author
-var AuthorMap map[string]model.Author
+
+var AuthorMap = make(map[string]model.Author)
 
 func InitAuthor() {
 	Authors = []model.Author{
@@ -23,7 +24,7 @@ func InitAuthor() {
 			Email:     "mohi@gmail.com",
 		},
 	}
-
+	AuthorMap := make(map[string]model.Author)
 	// Mapping Author to AuthorMap; key: email, value: author
 	for _, author := range Authors {
 		_, ok := AuthorMap[author.Email]

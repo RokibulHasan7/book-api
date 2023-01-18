@@ -3,7 +3,8 @@ package db
 import "github.com/RokibulHasan7/book-api/model"
 
 var Books []model.Book
-var BookMap map[string]model.Book
+
+var BookMap = make(map[string]model.Book)
 
 func InitBook() {
 	Books = []model.Book{
@@ -53,9 +54,14 @@ func InitBook() {
 		},
 	}
 
+	//BookMap := make(map[string]model.Book)
 	// Mapping books to BookMap; key = ISBN, value = book
 	for _, book := range Books {
-		BookMap[book.ISBN] = book
+		_, ok := BookMap[book.ISBN]
+		if !ok {
+			BookMap[book.ISBN] = book
+		}
+
 		for _, author := range book.AuthorList {
 			_, ok := AuthorMap[author.Email]
 			if !ok {
