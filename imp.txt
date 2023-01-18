@@ -1,0 +1,8 @@
+--- Gracefully shutdown server
+https://www.rudderstack.com/blog/implementing-graceful-shutdown-in-go/
+
+--- Easy one for gracefully shutdown
+https://gobyexample.com/signals
+
+--- gracefully shutdown with context background
+https://medium.com/@pinkudebnath/graceful-shutdown-of-golang-servers-using-context-and-os-signals-cc1fa2c55e97
