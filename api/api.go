@@ -18,7 +18,9 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func init() {
+var router = chi.NewRouter()
+
+func Init() {
 	os.Setenv("ADMIN_USER", "admin")
 	os.Setenv("ADMIN_PASS", "1234")
 	db.InitAuthor()
@@ -27,8 +29,6 @@ func init() {
 }
 
 func HandleRequest() {
-	router := chi.NewRouter()
-
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
@@ -70,22 +70,30 @@ func HandleRequest() {
 
 		// Get Book By Id
 		rc.Get("/api/v1/books/{id}", handler.GetBook)
+
+		// Get Book By ISBN
+		rc.Get("/api/v1/books/isbn/{isbn}", handler.GetBookByIsbn)
 	})
 
+}
+
+func StartServer() {
+	Init()          // Initialize DB
+	HandleRequest() // Expose Routers
+
 	// Server start
-	sigs := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 1) // Channel created to get the notification of Interrupt
 	signal.Notify(sigs, os.Interrupt)
 
 	go func() {
 		if err := http.ListenAndServe(":3333", router); err != nil {
-			log.Println("Shutting down")
-			log.Fatalln(err)
+			log.Printf("Shutting down, reason: %s", err.Error())
 			return
 		}
 	}()
 	log.Println("Server is listening on port 3333")
 	<-sigs
+
 	time.Sleep(2 * time.Second)
 	log.Println("Server is shutting down")
-
 }

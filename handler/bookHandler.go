@@ -13,24 +13,37 @@ import (
 
 func parseURL(url string) string {
 	param := strings.Split(url, "/")
+	fmt.Println(param[len(param)-1])
 	return param[len(param)-1]
 }
 
+// Get all books
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(db.Books)
 }
 
+// Post book
 func PostBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "" && contentType != "application/json" {
+		http.Error(w, "Content-Type header is not application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+
 	var newBook model.Book
 	err := json.NewDecoder(r.Body).Decode(&newBook)
+
 	if err != nil {
 		http.Error(w, "Can not decode data", http.StatusBadRequest)
 		return
 	}
+
 	if len(newBook.Id) == 0 || len(newBook.Name) == 0 || len(newBook.ISBN) == 0 || len(newBook.PublishDate) == 0 || len(newBook.AuthorList) == 0 {
-		http.Error(w, "Book Id or Name or ISBN or Publish date can not Null", http.StatusBadRequest)
+		fmt.Println("Failed to decode data1.")
+		http.Error(w, "Missing required fields.", http.StatusBadRequest)
 		return
 	}
 
@@ -39,23 +52,43 @@ func PostBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, ok := db.BookMap[newBook.ISBN]
+	if ok {
+		http.Error(w, "ISBN can't be the same.", http.StatusBadRequest)
+		return
+	}
+
 	db.Books = append(db.Books, newBook)
 	db.BookMap[newBook.ISBN] = newBook
 
-	//json.NewEncoder(w).Encode(newBook)
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Book added successfully."))
+	err = json.NewEncoder(w).Encode(newBook)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
+// Update existing book
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "" && contentType != "application/json" {
+		http.Error(w, "Content-Type header is not application/json", http.StatusUnsupportedMediaType)
+		return
+	}
 
 	var updatedBook model.Book
 
 	idParam := parseURL(r.URL.Path)
 
-	fmt.Println(idParam)
-	json.NewDecoder(r.Body).Decode(&updatedBook)
+	err := json.NewDecoder(r.Body).Decode(&updatedBook)
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, "Can not decode data", http.StatusBadRequest)
+		return
+	}
 	/*updateBook := model.Book{request["id"],
 	request["name"], request["isbn"],
 	request["publishDate"],
@@ -64,37 +97,33 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	}}}*/
 
 	// Checking information of updatedBook
-	if len(updatedBook.Id) == 0 || len(updatedBook.Name) == 0 || len(updatedBook.ISBN) == 0 || len(updatedBook.PublishDate) == 0 || len(updatedBook.AuthorList) == 0 {
-		http.Error(w, "Book Id or Name or ISBN or Publish date can not Null", http.StatusBadRequest)
-		return
-	}
-
-	if len(updatedBook.AuthorList[0].FirstName) == 0 || len(updatedBook.AuthorList[0].LastName) == 0 || len(updatedBook.AuthorList[0].Email) == 0 {
-		http.Error(w, "Author name or Email can not Null", http.StatusBadRequest)
-		return
-	}
-
 	check := false
 	for i, bookVal := range db.Books {
 		if bookVal.Id == idParam {
+			if bookVal.ISBN != updatedBook.ISBN && updatedBook.ISBN != "" {
+				http.Error(w, "ISBN can't change.", http.StatusBadRequest)
+				return
+			}
 			db.Books[i] = updatedBook
 			check = true
 			break
 		}
 	}
 	if !check {
-		w.WriteHeader(404)
+		//fmt.Println("Failed at -4.")
+		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Id not Exists."))
 		return
 	}
 
-	//json.NewEncoder(w).Encode(updateBook)
+	json.NewEncoder(w).Encode(updatedBook)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Book updated successfully."))
 }
 
+// Get book by Id
 func GetBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	idParam := parseURL(r.URL.Path)
 	var returnBook model.Book
@@ -113,14 +142,30 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(returnBook)
 }
 
-func DeleteBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+// Get book by ISBN
+func GetBookByIsbn(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-	fmt.Println("deleteBook func------------------")
+	isbnParam := parseURL(r.URL.Path)
+
+	book, ok := db.BookMap[isbnParam]
+	if !ok {
+		http.Error(w, "Book not Found!", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(book)
+}
+
+// Delete existing book
+func DeleteBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	idParam := parseURL(r.URL.Path)
 	check := false
 
@@ -134,11 +179,11 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !check {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Profile Not Found."))
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Profile Deleted."))
 }

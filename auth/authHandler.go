@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -20,7 +21,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&user)
 
 	authHeader := r.Header.Get("Authorization")
-	//fmt.Println(authHeader)
 	authStr := strings.Split(authHeader, " ")
 	fmt.Println(authStr[0])
 	fmt.Println(authStr[1])
@@ -31,58 +31,60 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//claims := token.Claims.(jwt.MapClaims)
+
+	log.Println(db.TokenAuth)
+	myToken, ok := GenerateToken(user.UserName)
 	expireTime := time.Now().Add(2 * time.Minute)
-	_, myToken, err := db.TokenAuth.Encode(map[string]interface{}{
-		"aud": user.UserName,
-		"exp": expireTime.Unix(),
-	})
+
 	fmt.Println("Mytoken: ", myToken)
-	if err != nil {
-		w.WriteHeader(500)
+	if ok != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Cann't Generate Authentication Token."))
 		return
 	}
 
+	// Set Cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:    "jwt",
 		Value:   myToken,
 		Expires: expireTime,
 	})
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-	w.WriteHeader(200)
+
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("You are Logged In!"))
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+	// Remove cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:    "jwt",
 		Value:   "",
 		Expires: time.Now(),
 	})
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Logged Out!"))
 }
 
 func PrimaryAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		fmt.Println(authHeader)
-		authStr := strings.Split(authHeader, " ")
-		fmt.Println(authStr[0])
-		fmt.Println(authStr[1])
+		//fmt.Println(authHeader)
+		//authStr := strings.Split(authHeader, " ")
+		//fmt.Println(authStr[0])
+		//fmt.Println(authStr[1])
 		if len(authHeader) > 7 && strings.ToUpper(authHeader[0:6]) == "BEARER" {
 			tokenString := authHeader[7:]
-			fmt.Println("TokenString from PrimaryAuth: ", tokenString)
+			//fmt.Println("TokenString from PrimaryAuth:", tokenString)
 
 			token, err := jwt.Parse(tokenString, func(tkn *jwt.Token) (interface{}, error) {
 				if _, ok := tkn.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", tkn.Header["alg"])
 				}
-
 				return []byte("secret"), nil
 			})
 
+			// Checking token payloads
 			_, ok := token.Claims.(jwt.MapClaims)
 
 			if !ok || !token.Valid || err != nil {
@@ -178,10 +180,7 @@ func Checker(r *http.Request) error {
 	authHeader := r.Header.Get("Authorization")
 	fmt.Println(authHeader)
 	authStr := strings.Split(authHeader, " ")
-	fmt.Println(authStr[0])
-	fmt.Println(authStr[1])
 	if len(authStr) == 2 && authStr[0] == "Basic" {
-
 		/*
 			func (r *Request) BasicAuth() (username, password string, ok bool) --->
 			It checks the Authorization header and then extracts the username and password from  Base64 encoded value
@@ -208,4 +207,18 @@ func Checker(r *http.Request) error {
 		return errors.New("unauthorized")
 	}
 	return nil
+}
+
+func GenerateToken(username string) (string, error) {
+	expireTime := time.Now().Add(2 * time.Minute)
+	_, myToken, err := db.TokenAuth.Encode(map[string]interface{}{
+		"aud": username,
+		"exp": expireTime.Unix(),
+	})
+	//log.Println(myToken)
+
+	if err != nil {
+		return "", err
+	}
+	return myToken, nil
 }

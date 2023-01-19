@@ -1,3 +1,6 @@
+--- JWTAuthentication
+https://codewithmukesh.com/blog/jwt-authentication-in-golang/
+
 --- Gracefully shutdown server
 https://www.rudderstack.com/blog/implementing-graceful-shutdown-in-go/
 
@@ -6,3 +9,8 @@ https://gobyexample.com/signals
 
 --- gracefully shutdown with context background
 https://medium.com/@pinkudebnath/graceful-shutdown-of-golang-servers-using-context-and-os-signals-cc1fa2c55e97
+
+
+
+--- Testing API
+https://www.infoq.com/articles/build-deploy-scalable-golang-api/

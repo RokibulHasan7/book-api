@@ -63,8 +63,8 @@ func InitBook() {
 		}
 
 		for _, author := range book.AuthorList {
-			_, ok := AuthorMap[author.Email]
-			if !ok {
+			_, err := AuthorMap[author.Email]
+			if !err {
 				Authors = append(Authors, author)
 				AuthorMap[author.Email] = author
 			}
