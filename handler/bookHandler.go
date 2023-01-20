@@ -13,7 +13,7 @@ import (
 
 func parseURL(url string) string {
 	param := strings.Split(url, "/")
-	fmt.Println(param[len(param)-1])
+	//fmt.Println(param[len(param)-1])
 	return param[len(param)-1]
 }
 
@@ -27,11 +27,6 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 // Post book
 func PostBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	contentType := r.Header.Get("Content-Type")
-	if contentType != "" && contentType != "application/json" {
-		http.Error(w, "Content-Type header is not application/json", http.StatusUnsupportedMediaType)
-		return
-	}
 
 	var newBook model.Book
 	err := json.NewDecoder(r.Body).Decode(&newBook)
@@ -73,11 +68,6 @@ func PostBook(w http.ResponseWriter, r *http.Request) {
 // Update existing book
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	contentType := r.Header.Get("Content-Type")
-	if contentType != "" && contentType != "application/json" {
-		http.Error(w, "Content-Type header is not application/json", http.StatusUnsupportedMediaType)
-		return
-	}
 
 	var updatedBook model.Book
 
@@ -180,10 +170,10 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	}
 	if !check {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Profile Not Found."))
+		w.Write([]byte("Book Not Found."))
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Profile Deleted."))
+	w.Write([]byte("Book Deleted."))
 }

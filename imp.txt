@@ -14,3 +14,9 @@ https://medium.com/@pinkudebnath/graceful-shutdown-of-golang-servers-using-conte
 
 --- Testing API
 https://www.infoq.com/articles/build-deploy-scalable-golang-api/
+
+
+--- curl
+https://developer.ibm.com/articles/what-is-curl-command/
+https://blog.hubspot.com/website/curl-command#:~:text=cURL%20is%20a%20CLI%20tool,to%20use%20by%20every%20user.
+

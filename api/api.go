@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/RokibulHasan7/book-api/db"
-
 	"github.com/go-chi/chi/middleware"
+
+	"github.com/RokibulHasan7/book-api/db"
 
 	"github.com/RokibulHasan7/book-api/auth"
 
@@ -29,7 +29,7 @@ func Init() {
 }
 
 func HandleRequest() {
-	router.Use(middleware.RequestID)
+	//router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
@@ -55,12 +55,15 @@ func HandleRequest() {
 
 		// Delete Book By Id
 		r.Delete("/api/v1/books/{id}", handler.DeleteBook)
+
+		// Logout
+		r.Post("/logout", auth.Logout)
 	})
 
 	// Public Routes
 	router.Group(func(rc chi.Router) {
 		rc.Post("/login", auth.Login)
-		rc.Post("/logout", auth.Logout)
+
 		rc.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Home."))
 		})

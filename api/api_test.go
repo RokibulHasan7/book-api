@@ -245,9 +245,10 @@ func TestGetBookByIsbn(t *testing.T) {
 
 	tests := []TestWithIsbn{
 		{Method: "GET", Path: "/api/v1/books/isbn/%s", Body: nil, ExpectedCode: 200, Isbn: "14-14-14"},
-		{Method: "GET", Path: "/api/v1/books/isbn/%s", Body: nil, ExpectedCode: 404, Isbn: "20-20-20"},
+		{Method: "GET", Path: "/api/v1/books/isbn/%s", Body: nil, ExpectedCode: 404, Isbn: "20-13-13"},
 		{Method: "GET", Path: "/api/v1/books/isbn/%s", Body: nil, ExpectedCode: 404, Isbn: "33-33-33"},
 	}
+	testnumber := 0
 	for _, test := range tests {
 		url := fmt.Sprintf(test.Path, test.Isbn)
 		req, err := http.NewRequest(test.Method, url, test.Body)
@@ -257,6 +258,10 @@ func TestGetBookByIsbn(t *testing.T) {
 
 		res := httptest.NewRecorder()
 		router.ServeHTTP(res, req)
+		if test.ExpectedCode != res.Result().StatusCode {
+			t.Fatalf("Test: %v, Expected code: %v, Actual code: %v", testnumber, test.ExpectedCode, res.Result().StatusCode)
+		}
 		assert.Equal(t, res.Result().StatusCode, test.ExpectedCode)
+		testnumber++
 	}
 }

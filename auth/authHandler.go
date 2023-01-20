@@ -69,10 +69,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func PrimaryAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		//fmt.Println(authHeader)
-		//authStr := strings.Split(authHeader, " ")
-		//fmt.Println(authStr[0])
-		//fmt.Println(authStr[1])
 		if len(authHeader) > 7 && strings.ToUpper(authHeader[0:6]) == "BEARER" {
 			tokenString := authHeader[7:]
 			//fmt.Println("TokenString from PrimaryAuth:", tokenString)
@@ -132,6 +128,24 @@ func PrimaryAuth(next http.Handler) http.Handler {
 				http.Error(w, "Access token is missing or invalid", http.StatusUnauthorized)
 				return
 			}*/
+		} else if len(authHeader) > 6 && strings.ToUpper(authHeader[0:5]) == "BASIC" {
+			username, password, ok := r.BasicAuth()
+
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			} else {
+				if _, ok := db.Users[username]; ok == false {
+					http.Error(w, "Wrong Username or Password.", http.StatusUnauthorized)
+					return
+				}
+
+				if pass, _ := db.Users[username]; pass != password {
+					http.Error(w, "Wrong Username or Password", http.StatusUnauthorized)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
 		} else {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		}
