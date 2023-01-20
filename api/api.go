@@ -7,8 +7,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
-
 	"github.com/RokibulHasan7/book-api/db"
 
 	"github.com/RokibulHasan7/book-api/auth"
@@ -30,9 +28,9 @@ func Init() {
 
 func HandleRequest() {
 	//router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.URLFormat)
+	//router.Use(middleware.Logger)
+	//router.Use(middleware.Recoverer)
+	//router.Use(middleware.URLFormat)
 
 	// Protected routes
 	router.Group(func(r chi.Router) {
