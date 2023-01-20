@@ -141,7 +141,7 @@ On the other CLI run these commands:-
 Get jwt token via login with basic authentication
 
 ```shell
-$ curl -X POST --user rakib:1234  http://localhost:3333/api/v1/login
+$ curl -X POST --user rakib:1234  http://localhost:3333/login
 ``` 
 
 Get all Books information
