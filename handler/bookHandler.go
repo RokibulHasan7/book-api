@@ -4,24 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
+
+	"github.com/go-chi/chi"
 
 	"github.com/RokibulHasan7/book-api/model"
 
 	"github.com/RokibulHasan7/book-api/db"
 )
 
-func parseURL(url string) string {
-	param := strings.Split(url, "/")
-	//fmt.Println(param[len(param)-1])
-	return param[len(param)-1]
-}
-
 // Get all books
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(db.Books)
+	err := json.NewEncoder(w).Encode(db.Books)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Post book
@@ -71,7 +70,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	var updatedBook model.Book
 
-	idParam := parseURL(r.URL.Path)
+	idParam := chi.URLParam(r, "id")
 
 	err := json.NewDecoder(r.Body).Decode(&updatedBook)
 	if err != nil {
@@ -79,12 +78,6 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can not decode data", http.StatusBadRequest)
 		return
 	}
-	/*updateBook := model.Book{request["id"],
-	request["name"], request["isbn"],
-	request["publishDate"],
-	[]model.Author{{request["firstname"],
-		request["lastname"], request["email"],
-	}}}*/
 
 	// Checking information of updatedBook
 	check := false
@@ -106,7 +99,11 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(updatedBook)
+	err = json.NewEncoder(w).Encode(updatedBook)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Book updated successfully."))
 }
@@ -115,7 +112,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 func GetBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	idParam := parseURL(r.URL.Path)
+	idParam := chi.URLParam(r, "id")
 	var returnBook model.Book
 	check := false
 	for i, bookVal := range db.Books {
@@ -127,20 +124,24 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !check {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Book not found."))
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(returnBook)
+	err := json.NewEncoder(w).Encode(returnBook)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get book by ISBN
 func GetBookByIsbn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	isbnParam := parseURL(r.URL.Path)
+	isbnParam := chi.URLParam(r, "isbn")
 
 	book, ok := db.BookMap[isbnParam]
 	if !ok {
@@ -148,15 +149,19 @@ func GetBookByIsbn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := json.NewEncoder(w).Encode(book)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(book)
 }
 
 // Delete existing book
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	idParam := parseURL(r.URL.Path)
+	idParam := chi.URLParam(r, "id")
 	check := false
 
 	for i, bookVal := range db.Books {

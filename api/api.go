@@ -19,8 +19,6 @@ import (
 var router = chi.NewRouter()
 
 func Init() {
-	os.Setenv("ADMIN_USER", "admin")
-	os.Setenv("ADMIN_PASS", "1234")
 	db.InitAuthor()
 	db.InitBook()
 	db.InitUser()
