@@ -1,7 +1,8 @@
 package main
 
-import "github.com/RokibulHasan7/book-api/api"
+import "github.com/RokibulHasan7/book-api/cmd"
 
 func main() {
-	api.StartServer()
+	//api.StartServer()
+	cmd.Execute()
 }

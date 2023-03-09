@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var router = chi.NewRouter()
+var Router = chi.NewRouter()
 
 func Init() {
 	db.InitAuthor()
@@ -31,7 +31,7 @@ func HandleRequest() {
 	//router.Use(middleware.URLFormat)
 
 	// Protected routes
-	router.Group(func(r chi.Router) {
+	Router.Group(func(r chi.Router) {
 		// Seek, verify and validate JWT tokens
 		//r.Use(jwtauth.Verifier(db.TokenAuth))
 
@@ -57,7 +57,7 @@ func HandleRequest() {
 	})
 
 	// Public Routes
-	router.Group(func(rc chi.Router) {
+	Router.Group(func(rc chi.Router) {
 		rc.Post("/login", auth.Login)
 
 		rc.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -76,21 +76,21 @@ func HandleRequest() {
 
 }
 
-func StartServer() {
+func StartServer(portNum string) {
 	Init()          // Initialize DB
 	HandleRequest() // Expose Routers
 
 	// Server start
 	sigs := make(chan os.Signal, 1) // Channel created to get the notification of Interrupt
 	signal.Notify(sigs, os.Interrupt)
-
+	portNum = ":" + portNum
 	go func() {
-		if err := http.ListenAndServe(":3333", router); err != nil {
+		if err := http.ListenAndServe(portNum, Router); err != nil {
 			log.Printf("Shutting down, reason: %s", err.Error())
 			return
 		}
 	}()
-	log.Println("Server is listening on port 3333")
+	log.Printf("Server is listening on port %v", portNum)
 	<-sigs
 
 	time.Sleep(2 * time.Second)
